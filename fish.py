@@ -8,23 +8,34 @@ from dotenv import load_dotenv
 load_dotenv()
 
 updater = Updater(token=os.getenv('TOKEN'))
-URL = 'https://api.thecatapi.com/v1/images/search'
-
-def get_new_task():
-    response = requests.get(URL).json()
-    random_cat = response[0].get('url')
-    return random_cat
+URL_TASK = os.getenv('URL_TASK')
+write_answer = ''
+try_number = ''
 
 def new_task(update, context):
+    global write_answer, try_number
     chat = update.effective_chat
-    context.bot.send_message(chat.id, text=get_new_task())
+    response=requests.get(URL_TASK).json()
+    context.bot.send_message(chat.id, text=response[0]['text'])
+    write_answer = response[0]['answer']
+    answer()
+    try_number = 1
+
+def answer():
     updater.dispatcher.add_handler(MessageHandler(Filters.text, check_answer))
-
+    
 def check_answer(update, context):
+    global try_number
     chat = update.effective_chat
-    print(update.message.text)
-
-
+    if write_answer == update.message.text:
+        context.bot.send_message(chat.id, text="Верный ответ!")
+    else:
+        try_number+=1
+        if try_number < 4:
+            context.bot.send_message(chat.id, text="Ответ неверный. Попробуй еще раз.")
+            answer()
+        else:
+            context.bot.send_message(chat.id, text=f"Верный ответ: {write_answer}")
 
 def fish(update, context):
     chat = update.effective_chat
@@ -40,8 +51,6 @@ def wake_up(update, context):
         text='Привет, {}. С чего начнём?'.format(name),
         reply_markup=button
     )
-
-  #  context.bot.send_photo(chat.id, get_new_image())
 
 updater.dispatcher.add_handler(CommandHandler('start', wake_up))
 updater.dispatcher.add_handler(CommandHandler('Math', new_task))
