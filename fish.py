@@ -22,8 +22,9 @@ def get_new_image():
 def new_cat(update, context):
     """Отправка фото котика."""
     chat = update.effective_chat
+    context.bot.send_message(chat.id, text='Привет!')
     context.bot.send_photo(chat.id, get_new_image())
- #   context.bot.send_photo(chat.id, 'http://mysite.xyz:8000/media/quizzles/photo_2020-03-26_16-38-14.jpg')
+    # context.bot.send_photo(chat.id, 'http://mysite.xyz:8000/media/quizzles/Jo.jpg')
 
 def new_task(update, context):
     """Получение новой задачи от API."""
