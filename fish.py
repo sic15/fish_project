@@ -10,6 +10,8 @@ load_dotenv()
 updater = Updater(token=os.getenv('TOKEN'))
 URL_TASK = os.getenv('URL_TASK')
 URL_CAT = os.getenv('URL_CAT')
+URL_CREATE_USER = os.getenv("URL_CREATE_USER")
+URL_CHECK_USER = os.getenv("URL_CHECK_USER")
 write_answer = None
 try_number = None
 button = ReplyKeyboardMarkup([['/Math', '/Fish', '/newcat']], resize_keyboard=True)
@@ -70,10 +72,15 @@ def wake_up(update, context):
     """Запуск бота."""
     chat = update.effective_chat
     name = update.message.chat.first_name
-    
+    response = requests.get(URL_CHECK_USER.format(id=chat.id)).json()
+    if len(response) == 0:
+        requests.post(URL_CREATE_USER, json={"player_id": chat.id})
+        score = ''
+    else:
+        score = 'Твой текущий счет {}.'.format(response[0]['score'])  
     context.bot.send_message(
         chat_id=chat.id,
-        text='Привет, {}. С чего начнём?'.format(name),
+        text=f'Привет, {name}. {score} С чего начнём?',
         reply_markup=button
     )
 
