@@ -37,7 +37,7 @@ def new_task(update, context):
     chat = update.effective_chat
     response=requests.get(URL_TASK).json()
     context.bot.send_message(chat.id, text=response[0]['text'])
-#    if response[0]['image']:
+#    if response[0]['image']:  не удалять!!! кусок ждёт появления картинок на сервере!!!
 #        context.bot.send_photo(chat.id, response[0]['image'])
     write_answer = response[0]['answer']
     read_answer()
