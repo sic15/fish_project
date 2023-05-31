@@ -12,7 +12,7 @@ URL_TASK = os.getenv('URL_TASK')
 URL_CAT = os.getenv('URL_CAT')
 URL_CREATE_USER = os.getenv("URL_CREATE_USER")
 URL_CHECK_USER = os.getenv("URL_CHECK_USER")
-URL_SCORE = os.getenv("URL_SCORE")
+URL_CONTROL_USER = os.getenv("URL_CONTROL_USER")
 write_answer = None
 try_number = None
 task_id = None
@@ -37,16 +37,28 @@ def new_task(update, context):
     """Получение новой задачи от API."""
     global write_answer, try_number, task_id
     chat = update.effective_chat
-    response = requests.get(URL_TASK).json()
-    context.bot.send_message(chat.id, text=response[0]['text'])
-    task_id = response[0]['id']
-# не удалять!!! кусок ждёт появления картинок на сервере!!!
-#    if response[0]['image']:
-#        context.bot.send_photo(chat.id, response[0]['image'])
-    write_answer = response[0]['answer']
-    read_answer()
-    try_number = 1
+    response = requests.get(URL_TASK.format(chat_id=chat.id)).json()
+    if len(response) > 0:
+        context.bot.send_message(chat.id, text=response[0]['text'])
+        task_id = response[0]['id']
+        # не удалять!!! кусок ждёт появления картинок на сервере!!!
+        #    if response[0]['image']:
+        #        context.bot.send_photo(chat.id, response[0]['image'])
+        write_answer = response[0]['answer']
+        read_answer()
+        try_number = 1
+    else:
+        button = ReplyKeyboardMarkup([['Да', 'Нет']], resize_keyboard=True)
+        context.bot.send_message(chat.id, text="Вы решили все задачи! Хотите начать сначала?", reply_markup=button)
+        updater.dispatcher.add_handler(MessageHandler(Filters.regex(r'да'), del_user))
+        updater.dispatcher.add_handler(MessageHandler(Filters.regex(r'нет'), continue_work))
 
+def del_user(update, context):
+    chat = update.effective_chat
+    response = requests.get(URL_CHECK_USER.format(id=chat.id)).json()
+    id = response[0]['id']
+    requests.delete(URL_CONTROL_USER.format(id=id))
+    wake_up()
 
 def read_answer():
     """Чтение ответа пользователя."""
@@ -80,13 +92,11 @@ def processing_score(context, try_number, chat_id):
     if len(response) > 0:
         id = response[0]['id']
         score = 13 - try_number * 3
-        requests.patch(URL_SCORE.format(id=id),
+        requests.patch(URL_CONTROL_USER.format(id=id),
             json={
                 'score': score,
                 'solved_tasks': [task_id]})
         context.bot.send_message(chat_id=chat_id, text=f'Ваш текущий счет {score}')
-
-        
 
 
 def fish(update, context):
