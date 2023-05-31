@@ -12,6 +12,7 @@ URL_TASK = os.getenv('URL_TASK')
 URL_CAT = os.getenv('URL_CAT')
 URL_CREATE_USER = os.getenv("URL_CREATE_USER")
 URL_CHECK_USER = os.getenv("URL_CHECK_USER")
+URL_SCORE = os.getenv("URL_SCORE")
 write_answer = None
 try_number = None
 button = ReplyKeyboardMarkup([['/Math', '/Fish', '/newcat']], resize_keyboard=True)
@@ -27,8 +28,6 @@ def new_cat(update, context):
     chat = update.effective_chat
     context.bot.send_message(chat.id, text='Привет!')
     context.bot.send_photo(chat.id, get_new_image())
-    # context.bot.send_photo(chat.id, 'http://mysite.xyz:8000/media/quizzles/Jo.jpg')
-
 
 
 def new_task(update, context):
@@ -37,7 +36,8 @@ def new_task(update, context):
     chat = update.effective_chat
     response=requests.get(URL_TASK).json()
     context.bot.send_message(chat.id, text=response[0]['text'])
-#    if response[0]['image']:  не удалять!!! кусок ждёт появления картинок на сервере!!!
+# не удалять!!! кусок ждёт появления картинок на сервере!!!
+#    if response[0]['image']:  
 #        context.bot.send_photo(chat.id, response[0]['image'])
     write_answer = response[0]['answer']
     read_answer()
@@ -53,6 +53,7 @@ def check_answer(update, context):
     chat = update.effective_chat
     if write_answer.lower() == update.message.text.lower():
         context.bot.send_message(chat.id, text="Верный ответ!")
+        processing_score(try_number, chat.id)
         continue_work(update, context)
     else:
         try_number+=1
@@ -61,7 +62,15 @@ def check_answer(update, context):
             read_answer()
         else:
             context.bot.send_message(chat.id, text=f"Верный ответ: {write_answer}")
+            processing_score(try_number, chat.id)
             continue_work(update, context)
+
+def processing_score(try_number, chat_id):
+    """Обработка рейтинговых очков."""
+    response = requests.get(URL_CHECK_USER.format(id=chat_id)).json()
+    id = response[0]['id']
+    requests.patch(URL_SCORE.format(id=id), json={'score': 13-try_number*3})
+
 
 def fish(update, context):
     """Работа с рыбками."""
