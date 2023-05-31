@@ -15,7 +15,7 @@ URL_CHECK_USER = os.getenv("URL_CHECK_USER")
 URL_SCORE = os.getenv("URL_SCORE")
 write_answer = None
 try_number = None
-button = ReplyKeyboardMarkup([['/Math', '/Fish', '/newcat']], resize_keyboard=True)
+button = ReplyKeyboardMarkup([['Математика', 'Рыбки', 'Покажи котика']], resize_keyboard=True)
 
 def get_new_image():
     """Получение фото котика."""
@@ -26,7 +26,6 @@ def get_new_image():
 def new_cat(update, context):
     """Отправка фото котика."""
     chat = update.effective_chat
-    context.bot.send_message(chat.id, text='Привет!')
     context.bot.send_photo(chat.id, get_new_image())
 
 
@@ -104,10 +103,12 @@ def continue_work(update, context):
     )
 
 updater.dispatcher.add_handler(CommandHandler('start', wake_up))
-updater.dispatcher.add_handler(CommandHandler('Math', new_task))
-#updater.dispatcher.add_handler(MessageHandler(MessageHandler.filters.Regex('Math'), new_task))
-updater.dispatcher.add_handler(CommandHandler('Fish', fish))
-updater.dispatcher.add_handler(CommandHandler('newcat', new_cat))
+#updater.dispatcher.add_handler(CommandHandler('Math', new_task))
+updater.dispatcher.add_handler(MessageHandler(Filters.regex(r'Математика'), new_task))
+updater.dispatcher.add_handler(MessageHandler(Filters.regex(r'Рыбки'), fish))
+#updater.dispatcher.add_handler(CommandHandler('Fish', fish))
+#updater.dispatcher.add_handler(CommandHandler('newcat', new_cat))
+updater.dispatcher.add_handler(MessageHandler(Filters.regex(r'котика'), new_cat))
 
 updater.start_polling()
 updater.idle() 
