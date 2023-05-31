@@ -15,6 +15,7 @@ URL_CHECK_USER = os.getenv("URL_CHECK_USER")
 URL_SCORE = os.getenv("URL_SCORE")
 write_answer = None
 try_number = None
+task_id = None
 button = ReplyKeyboardMarkup([['Математика', 'Рыбки', 'Покажи котика']], resize_keyboard=True)
 
 def get_new_image():
@@ -31,10 +32,11 @@ def new_cat(update, context):
 
 def new_task(update, context):
     """Получение новой задачи от API."""
-    global write_answer, try_number
+    global write_answer, try_number, task_id
     chat = update.effective_chat
     response=requests.get(URL_TASK).json()
     context.bot.send_message(chat.id, text=response[0]['text'])
+    task_id = response[0]['id']
 # не удалять!!! кусок ждёт появления картинок на сервере!!!
 #    if response[0]['image']:  
 #        context.bot.send_photo(chat.id, response[0]['image'])
@@ -68,7 +70,7 @@ def processing_score(try_number, chat_id):
     """Обработка рейтинговых очков."""
     response = requests.get(URL_CHECK_USER.format(id=chat_id)).json()
     id = response[0]['id']
-    requests.patch(URL_SCORE.format(id=id), json={'score': 13-try_number*3})
+    requests.patch(URL_SCORE.format(id=id), json={'score': 13-try_number*3, 'solved_tasks': [task_id]})
 
 
 def fish(update, context):
