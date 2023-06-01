@@ -13,6 +13,7 @@ URL_CAT = os.getenv('URL_CAT')
 URL_CREATE_USER = os.getenv("URL_CREATE_USER")
 URL_CHECK_USER = os.getenv("URL_CHECK_USER")
 URL_CONTROL_USER = os.getenv("URL_CONTROL_USER")
+URL = os.getenv('BKND_URL')
 write_answer = None
 try_number = None
 task_id = None
@@ -92,11 +93,12 @@ def processing_score(context, try_number, chat_id):
     if len(response) > 0:
         id = response[0]['id']
         score = 13 - try_number * 3
-        requests.patch(URL_CONTROL_USER.format(id=id),
+        temp = requests.patch(f'{URL}player/{id}/',
             json={
-                'score': score,
-                'solved_tasks': [task_id]})
-        context.bot.send_message(chat_id=chat_id, text=f'Ваш текущий счет {score}')
+                "score": score,
+                "solved_tasks": [task_id]})
+        print('>>>>>', temp.json())
+        context.bot.send_message(chat_id=chat_id, text=f'Баллы за эту задачу: {score}')
 
 
 def fish(update, context):
@@ -110,7 +112,9 @@ def wake_up(update, context):
     chat = update.effective_chat
     name = update.message.chat.first_name
     response = requests.get(URL_CHECK_USER.format(id=chat.id)).json()
+    print('>>>>>>>>>', response)
     if len(response) == 0:
+        print('<<<<<<<<<', chat.id)
         requests.post(URL_CREATE_USER, json={"player_id": chat.id})
         score = ''
     else:
