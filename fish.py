@@ -18,7 +18,7 @@ write_answer = None
 try_number = None
 task_id = None
 button = ReplyKeyboardMarkup(
-    [['Математика', 'Рыбки', 'Покажи котика']], resize_keyboard=True)
+    [['Математика', 'Рыбки', 'Покажи котика', 'Покажи мои баллы']], resize_keyboard=True)
 
 
 def get_new_image():
@@ -51,15 +51,29 @@ def new_task(update, context):
     else:
         button = ReplyKeyboardMarkup([['Да', 'Нет']], resize_keyboard=True)
         context.bot.send_message(chat.id, text="Вы решили все задачи! Хотите начать сначала?", reply_markup=button)
-        updater.dispatcher.add_handler(MessageHandler(Filters.regex(r'да'), del_user))
-        updater.dispatcher.add_handler(MessageHandler(Filters.regex(r'нет'), continue_work))
+        updater.dispatcher.add_handler(MessageHandler(Filters.regex(r'Да'), del_user))
+        updater.dispatcher.add_handler(MessageHandler(Filters.regex(r'Нет'), continue_work))
+        updater.dispatcher.add_handler(
+    MessageHandler(
+        Filters.regex(r'баллы'),
+        current_score))
+
+def current_score(update, context):
+    """Проверка текущего счета."""
+    chat = update.effective_chat
+    response = requests.get(URL_CHECK_USER.format(id=chat.id)).json()
+    id = response[0]['id']
+    response = requests.get(URL_CONTROL_USER.format(id=id)).json()
+   # print(response)
+    context.bot.send_message(chat.id, text=f"Ваш текущий счет {response['score']}")
 
 def del_user(update, context):
+    """Удаление пользователя."""
     chat = update.effective_chat
     response = requests.get(URL_CHECK_USER.format(id=chat.id)).json()
     id = response[0]['id']
     requests.delete(URL_CONTROL_USER.format(id=id))
-    wake_up()
+    wake_up(update, context)
 
 def read_answer():
     """Чтение ответа пользователя."""
@@ -93,11 +107,10 @@ def processing_score(context, try_number, chat_id):
     if len(response) > 0:
         id = response[0]['id']
         score = 13 - try_number * 3
-        temp = requests.patch(f'{URL}player/{id}/',
+        requests.patch(URL_CONTROL_USER.format(id=id),
             json={
                 "score": score,
                 "solved_tasks": [task_id]})
-        print('>>>>>', temp.json())
         context.bot.send_message(chat_id=chat_id, text=f'Баллы за эту задачу: {score}')
 
 
@@ -112,9 +125,7 @@ def wake_up(update, context):
     chat = update.effective_chat
     name = update.message.chat.first_name
     response = requests.get(URL_CHECK_USER.format(id=chat.id)).json()
-    print('>>>>>>>>>', response)
     if len(response) == 0:
-        print('<<<<<<<<<', chat.id)
         requests.post(URL_CREATE_USER, json={"player_id": chat.id})
         score = ''
     else:
@@ -140,13 +151,17 @@ def continue_work(update, context):
 updater.dispatcher.add_handler(CommandHandler('start', wake_up))
 updater.dispatcher.add_handler(
     MessageHandler(
-        Filters.regex(r'Математика'),
+        Filters.regex(r'Матем'),
         new_task))
-updater.dispatcher.add_handler(MessageHandler(Filters.regex(r'Рыбки'), fish))
+updater.dispatcher.add_handler(MessageHandler(Filters.regex(r'Рыб'), fish))
 updater.dispatcher.add_handler(
     MessageHandler(
-        Filters.regex(r'котика'),
+        Filters.regex(r'кот'),
         new_cat))
+updater.dispatcher.add_handler(
+    MessageHandler(
+        Filters.regex(r'баллы'),
+        current_score))
 
 updater.start_polling()
 updater.idle()
