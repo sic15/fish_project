@@ -132,7 +132,7 @@ def wake_up(update, context):
     continue_work(update, context)
 
 def continue_work(update, context):
-    score_message = f'Твой текущий счет: {player_session.current_score}.'
+    score_message = f'Твой текущий счет: {player_session.get_user_score()}.'
     context.bot.send_message(
         chat_id=player_session.player_id,
         text=f'Привет, {player_session.name}. {score_message} С чего начнём?',
