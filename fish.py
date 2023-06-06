@@ -43,8 +43,8 @@ def new_task(update, context):
         context.bot.send_message(chat.id, text=response[0]['text'])
         task_id = response[0]['id']
         # не удалять!!! кусок ждёт появления картинок на сервере!!!
-        #    if response[0]['image']:
-        #        context.bot.send_photo(chat.id, response[0]['image'])
+        if response[0]['image']:
+            context.bot.send_photo(chat.id, response[0]['image'])
         write_answer = response[0]['answer']
         read_answer()
         try_number = 1
