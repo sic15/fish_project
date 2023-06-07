@@ -64,7 +64,6 @@ def current_score(update, context):
     response = requests.get(URL_CHECK_USER.format(id=chat.id)).json()
     id = response[0]['id']
     response = requests.get(URL_CONTROL_USER.format(id=id)).json()
-   # print(response)
     context.bot.send_message(chat.id, text=f"Ваш текущий счет {response['score']}")
 
 def del_user(update, context):
