@@ -47,8 +47,10 @@ def player_init(update, context):
 
 def check_session(func):
     def wrapper(*args, **kwargs):
+        update, context = *args,
         if 'player_session' not in globals():
-            update, context = *args,
+            player_init(update, context)
+        if player_session.player_id != update.effective_chat.id:
             player_init(update, context)
         func(*args, **kwargs)
     return wrapper
